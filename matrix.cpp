@@ -4,35 +4,45 @@
 #include <stdio.h>
 #include <string.h>
 #include <fstream>
-#include <tchar.h>
-#include <windows.h>
 #include <stdio.h>
 #include <string>
+#include <windows.h>
 #include "matrix.h"
+
 typedef float** d_mat;
-//процедура  создания матрицы nXn
-void create_mat(d_mat(&fA), long n) {
-	for (int i = 0; i < n; i++)
-		fA[i] = new float[n];
+
+//процедура создания матрицы nXn
+void create_mat(d_mat(&mat), long size) {
+	for (int i = 0; i < size; i++)
+		mat[i] = new float[size];
 	//инициализируем 0
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
-			fA[i][j] = 0;
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			mat[i][j] = 0;
 }
 
-//процедура  чтения из файла
-void read_f_mat(FILE* fin,  d_mat(&a), long n) {
-	float d = 0;
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++) {
+//процедура чтения из файла
+void read_f_mat(FILE* fin, d_mat(&a), long size) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 			fscanf(fin, "%f", (&a[i][j]));
-		}
+}
+
+//очистка и удаление м-цы
+void clean_mat(d_mat(&mat), long size) {
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++)
+			mat[i][j] = 0;
+		delete[] mat[i];
+	}
+	delete[] mat;
+	mat = 0;
 }
 
 //процедура записи матрицы в файл
-void write_f_mat(FILE* fout, d_mat(&a), long n) {
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
+void write_f_mat(FILE* fout, d_mat(&a), long size) {
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size; j++) {
 			fprintf(fout, "%f", a[i][j]);
 			fprintf(fout, "%c", ' ');
 		}
@@ -42,9 +52,9 @@ void write_f_mat(FILE* fout, d_mat(&a), long n) {
 }
 
 //процедура меняет 2 строки в матрице местами
-void swap(d_mat(&mat), long n, int i, int i1) {
+void swap(d_mat(&mat), long size, int i, int i1) {
 	int x;
-	for (int j = 0; j < n; j++) {
+	for (int j = 0; j < size; j++) {
 		x = mat[i][j];
 		mat[i][j] = mat[i1][j];
 		mat[i1][j] = x;
@@ -52,40 +62,38 @@ void swap(d_mat(&mat), long n, int i, int i1) {
 }
 
 //процедура произведения матрицы на число q
-void mult_numXmat(d_mat a, long n, long q,  d_mat(&b)) {
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
+void mult_numXmat(d_mat a, long size, long q, d_mat(&b)) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 			b[i][j] = a[i][j] * q;
 }
 
 //процедура суммы матриц
-void sum_mat(d_mat a, d_mat b, long n, d_mat(&c)) {
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
+void sum_mat(d_mat a, d_mat b, long size, d_mat(&c)) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 			c[i][j] = a[i][j] + b[i][j];
-
 }
 
 //процедура произведения матрицы на матрицу (квадратных)
-void mult_matXmat(d_mat a, d_mat b, long n, d_mat(&c)) {
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
-			for (int h = 0; h < n; h++)
+void mult_matXmat(d_mat a, d_mat b, long size, d_mat(&c)) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
+			for (int h = 0; h < size; h++)
 				c[i][j] += a[i][h] * b[h][j];
-
 }
 
 //процедура транспонировании квадратной матрицы 
-void mat_transp( d_mat a, long n, d_mat(&c)) {
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
+void mat_transp(d_mat a, long size, d_mat(&c)) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 			c[j][i] = a[i][j];
 }
 
 //процедура создает единичную матрицу
-void create_unit_mat(d_mat(&e), long(&n)) {
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++)
+void create_unit_mat(d_mat(&e), long(&size)) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 			if (i == j)
 				e[i][j] = 1;
 			else
@@ -93,59 +101,55 @@ void create_unit_mat(d_mat(&e), long(&n)) {
 }
 
 //процедура находит ненулевой элемент ниже заданного элемента в столбце 
-int find_nozero_element_mat(d_mat(&mat), long n, int i, int j)
-{
-	for (int i1 = i + 1; i1 < n; i1++)
+int find_nozero_element_mat(d_mat(&mat), long size, int i, int j) {
+	for (int i1 = i + 1; i1 < size; i1++)
 		if (mat[i1][j] != 0)
 			return i1;
 	return -1;
 }
 
 //процедура делает шаг гаусса (если не знаешь что такое шаг гауса, лучше почитай теорию по матрицам)
-void step_gause(d_mat(&mat), long n, int i, int j) {
+void step_gause(d_mat(&mat), long size, int i, int j) {
 	float k;
-	for (int h = i + 1; h < n; h++)
+	for (int h = i + 1; h < size; h++)
 		if (mat[h][j] != 0) {
 			k = mat[h][j] / mat[i][j];
-			for (int l = j; l < n; l++)
+			for (int l = j; l < size; l++)
 				mat[h][l] -= k * mat[i][l];
 		}
-
 }
 
 //процедура делает матрицу треугольной
-void make_triangle_mat(d_mat(&mat), long n) {
-	int i = 0, i1;
-	for (int i = 0; i < n; i++) {
+void make_triangle_mat(d_mat(&mat), long size) {
+	int i1;
+	for (int i = 0; i < size; i++) {
 		//находим лидирующий элемент
-		if (mat[i][i] != 0) {
-			step_gause(mat, n, i, i);
-		}
+		if (mat[i][i] != 0)
+			step_gause(mat, size, i, i);
 		else {
 			//если лидирующий элемент 0, то пытаемся поменять эту строку с какой-то другой где он не 0
-			i1 = find_nozero_element_mat(mat, n, i, i);
+			i1 = find_nozero_element_mat(mat, size, i, i);
 			if (i1 != -1) {
-				swap(mat, n, i, i1);
-				step_gause(mat, n, i, i);
+				swap(mat, size, i, i1);
+				step_gause(mat, size, i, i);
 			}
 		}
 	}
-
 }
 
-//процедура считатет определитель  у треугольноый матрицы
-float count_det_A(d_mat(&mat), long n) {
+//процедура считатет определитель у треугольноый матрицы
+float count_det_A(d_mat(&mat), long size) {
 	float det = 1;
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < size; i++)
 		det *= mat[i][i];
 	return det;
 }
 
 //процедура находит алгеоброичекое дополнеиние по i строке и j столбцу
-void find_alg_dop(d_mat new_A, long n, int x, int y,  d_mat(&alg_dop)) {
+void find_alg_dop(d_mat new_A, long size, int x, int y, d_mat(&alg_dop)) {
 	int  x1, y1;
-	for (int i = 0; i < n; i++)
-		for (int j = 0; j < n; j++) {
+	for (int i = 0; i < size; i++)
+		for (int j = 0; j < size; j++)
 			if (x != i && y != j) {
 				x1 = i;
 				y1 = j;
@@ -154,207 +158,219 @@ void find_alg_dop(d_mat new_A, long n, int x, int y,  d_mat(&alg_dop)) {
 				if (j > y) y1--;
 				alg_dop[x1][y1] = new_A[i][j];
 			}
-		}
 }
 
 //процедура находит обратную матрицу (если она существует)
-void find_reverse_mat(d_mat new_A, long n, d_mat(&reverse_A)) {
-	if (n > 1){
+void find_reverse_mat(d_mat new_A, long size, d_mat(&reverse_A)) {
+	if (size > 1) {
 		double det_A;
-		d_mat A = new float*[n], alg_dop = new float*[n - 1], reverse_A_T = new float*[n];
-		create_mat(A, n);
-		create_mat(reverse_A_T, n);
-		create_mat(alg_dop, n - 1);
-		mult_numXmat(new_A, n, 1, A);
-		make_triangle_mat(A, n);
-		det_A = count_det_A(A, n);
-		for (int i = 0; i < n; i++)
-			for (int j = 0; j < n; j++) {
+		d_mat A = new float* [size], alg_dop = new float* [size - 1], reverse_A_T = new float* [size];
+
+		create_mat(A, size);
+		create_mat(reverse_A_T, size);
+		create_mat(alg_dop, size - 1);
+
+		mult_numXmat(new_A, size, 1, A);
+		make_triangle_mat(A, size);
+		det_A = count_det_A(A, size);
+
+		for (int i = 0; i < size; i++)
+			for (int j = 0; j < size; j++) {
 				//находим алгеобраическое  дополнение 
-				find_alg_dop(new_A, n, i, j, alg_dop);
+				find_alg_dop(new_A, size, i, j, alg_dop);
+
 				//находим ее  определитель и записывваем в ячейку i,  j (знак зависит от четности (i+j))
-				make_triangle_mat(alg_dop, n - 1);
-				reverse_A_T[i][j] = count_det_A(alg_dop, n - 1) / det_A;
+				make_triangle_mat(alg_dop, size - 1);
+				reverse_A_T[i][j] = count_det_A(alg_dop, size - 1) / det_A;
 				if ((i + j) % 2 == 1)
 					reverse_A_T[i][j] *= -1;
 			}
+
 		//необходимо транспонировать эту матрицу
-		mat_transp(reverse_A_T, n, reverse_A);
-		delete A;
-		delete reverse_A_T;
-		delete alg_dop;
+		mat_transp(reverse_A_T, size, reverse_A);
+
+		clean_mat(A, size);
+		clean_mat(reverse_A_T, size);
+		clean_mat(alg_dop, size - 1);
 	}
-	else {
+	else
 		reverse_A[0][0] = 1 / new_A[0][0];
-	}
 }
 
-//процедура ищет определитель матрицы методом гаусса и выводи его в файл
-void gause(FILE* fin, FILE* fout) {
-	long  x, t;
-	long n;
-	fscanf(fin, "%i", &n);
-	if (n > 0) {
-		d_mat  A = new float*[n];
-		create_mat(A, n);
-		read_f_mat(fin, A, n);
-		make_triangle_mat(A, n);
-		fprintf(fout, "%f", count_det_A(A, n));
-		delete A;
-	}
-	else 
-	{
-		fprintf(fout, "%s", "Введен неправильный параметр n");
-	}
+//процедура ищет определитель матрицы методом Гаусса и выводит его в файл
+void gause(FILE* fout, d_mat A, long size) {
+	d_mat dop_A = new float* [size];
+	create_mat(dop_A, size);
+
+	//начальный вид:
+	fprintf(fout, "\nНачальный вид::\n");
+	write_f_mat(fout, A, size);
+
+	mult_numXmat(A, size, 1, dop_A);
+	make_triangle_mat(dop_A, size);
+
+	//треугольный вид:
+	fprintf(fout, "\nТреугольный вид:\n");
+	write_f_mat(fout, dop_A, size);
+
+	fprintf(fout, "\nОпределитель м - цы A\':\n");
+	fprintf(fout, "%f", count_det_A(dop_A, size));
+	fprintf(fout, "\n");
 }
 
-//возврощает флаг того что можно найти (и находит если можно) или нельзя искомую матрицу X
-int solve_mat_equation(d_mat A, d_mat C, long n, float b, d_mat(&X)) {
-	d_mat  new_A = new float*[n], e = new float*[n];
-	create_mat(e, n);
-	create_mat(new_A, n);
-	//привводим уравнение к виду X*A'=C (упрощаем уравнение) 
-	create_unit_mat(e, n);
-	mult_numXmat(e, n, b,  e);
-	sum_mat(A, e, n, new_A);
+//возвращает флаг того что можно найти (и находит если можно) или нельзя искомую матрицу X
+int solve_mat_equation(FILE* fout, d_mat A, d_mat B, long size, float b, d_mat(&X)) {
+	d_mat new_A = new float* [size], e = new float* [size], dop_mat = new float* [size];
+	create_mat(e, size);
+	create_unit_mat(e, size);
+	create_mat(new_A, size);
+	create_mat(dop_mat, size);
+
+	//приводим уравнение к виду X*A'=B (упрощаем уравнение) 
+	mult_numXmat(e, size, b, e);
+	sum_mat(A, e, size, new_A);
+
 	//дублируем полученный новый элемент с А, так как при подсчете определителя
 	//нам нужно сделать матрицу треугольной, что портит исходник 
-	mult_numXmat(new_A, n, 1,  A);
+	mult_numXmat(new_A, size, 1, dop_mat);
+
 	//проверяем, что есть корень уравнения
-	make_triangle_mat(new_A, n);
-	if (count_det_A(new_A, n) == 0)
+	make_triangle_mat(dop_mat, size);
+
+	if (count_det_A(dop_mat, size) == 0)
 		return -1;
 	else {
 		//создаем обратную матрицу
-		d_mat reverse_A = new float*[n];
-		create_mat(reverse_A, n);
-		find_reverse_mat(A, n,  reverse_A);
+		d_mat reverse_A = new float* [size];
+		create_mat(reverse_A, size);
+		find_reverse_mat(new_A, size, reverse_A);
+
+		//исходная м-ца
+		fprintf(fout, "\nA'+2:\n");
+		write_f_mat(fout, new_A, size);
+
+		//обратная м-ца
+		fprintf(fout, "\nОбратная м-ца для A'+2:\n");
+		write_f_mat(fout, reverse_A, size);
+
 		//получаем искомую матрицу
-		mult_matXmat(C, reverse_A, n, X);
-		delete reverse_A;
+		mult_matXmat(B, reverse_A, size, X);
+
+		clean_mat(reverse_A, size);
 	}
 
-	delete e;
-	delete new_A;
+	clean_mat(e, size);
+	clean_mat(new_A, size);
+	clean_mat(dop_mat, size);
+
 	return 1;
 }
 
 //процедура считает f(A)=2x^2-7x-1
-void f_A(FILE* fout, d_mat(&a), long n,  d_mat(&b)) {
-	d_mat e = new float*[n], minus_e = new float*[n], x1 = new float*[n], x2 = new float*[n], rez = new float*[n];
-	create_mat(e, n);
-	create_mat(minus_e, n);
-	create_mat(x1, n);
-	create_mat(x2, n);
-	create_mat(rez, n);
+void f_A(FILE* fout, d_mat(&a), long size, d_mat(&b)) {
+	d_mat e = new float* [size], minus_e = new float* [size], x1 = new float* [size], x2 = new float* [size], rez = new float* [size];
+	create_mat(e, size);
+	create_mat(minus_e, size);
+	create_mat(x1, size);
+	create_mat(x2, size);
+	create_mat(rez, size);
+
 	//создаем единичную матрицу и минус единичную
-	create_unit_mat(e, n);
-	mult_numXmat(e, n, -1,  minus_e);
-	mult_matXmat(a, a, n, x2);
+	create_unit_mat(e, size);
+	mult_numXmat(e, size, -1, minus_e);
+
+	fprintf(fout, "\nf(x):\n");
+
 	//х^2
-	write_f_mat(fout, x2, n);
-	mult_numXmat(x2, n, 2,  x1);
+	mult_matXmat(a, a, size, x2);
+	fprintf(fout, "\nx^2:\n");
+	write_f_mat(fout, x2, size);
 	//2x^2
-	write_f_mat(fout, x1, n);
-	mult_numXmat(a, n, -7,  x2);
+	mult_numXmat(x2, size, 2, x1);
+	fprintf(fout, "\n2x^2:\n");
+	write_f_mat(fout, x1, size);
 	//-7x
-	write_f_mat(fout, x2, n);
-	sum_mat(x1, x2, n, rez);
+	mult_numXmat(a, size, -7, x2);
+	fprintf(fout, "\n-7x:\n");
+	write_f_mat(fout, x2, size);
 	//2x^2-7x
-	write_f_mat(fout, rez, n);
-	sum_mat(rez, minus_e, n, b);
-	//2x^2-7x-1
-	write_f_mat(fout, b, n);
-	delete e;
-	delete x1;
-	delete x2;
-	delete rez;
+	sum_mat(x1, x2, size, rez);
+	fprintf(fout, "\n2x^2-7x:\n");
+	write_f_mat(fout, rez, size);
+	//f(x)=2x^2-7x-1
+	sum_mat(rez, minus_e, size, b);
+	fprintf(fout, "\nf(x)=2x^2-7x-1:\n");
+	write_f_mat(fout, b, size);
+
+	clean_mat(e, size);
+	clean_mat(minus_e, size);
+	clean_mat(x1, size);
+	clean_mat(x2, size);
+	clean_mat(rez, size);
 }
 
 //процедура считает g(A)=2*x^2-x
-void g_A(FILE* fout, d_mat(&a), long n, d_mat(&b)) {
-	d_mat  x1 = new float*[n], x2 = new float*[n];
-	create_mat(x1, n);
-	create_mat(x2, n);
+void g_A(FILE* fout, d_mat(&a), long size, d_mat(&b)) {
+	d_mat  x1 = new float* [size], x2 = new float* [size];
+	create_mat(x1, size);
+	create_mat(x2, size);
 
-	mult_matXmat(a, a, n, x2);
+	fprintf(fout, "\ng(x):\n");
+
 	//x^2
-	write_f_mat(fout, x2, n);
-	mult_numXmat(x2, n, 2,  x1);
+	mult_matXmat(a, a, size, x2);
+	fprintf(fout, "\nx^2:\n");
+	write_f_mat(fout, x2, size);
 	//2x^2
-	write_f_mat(fout, x1, n);
-	mult_numXmat(a, n, -1,  x2);
+	mult_numXmat(x2, size, 2, x1);
+	fprintf(fout, "\n2x^2:\n");
+	write_f_mat(fout, x1, size);
 	//-x
-	write_f_mat(fout, x2, n);
-	sum_mat(x1, x2, n, b);
-	//2x^2-x
-	write_f_mat(fout, b, n);
-	delete x1;
-	delete x2;
+	mult_numXmat(a, size, -1, x2);
+	fprintf(fout, "\n-x:\n");
+	write_f_mat(fout, x2, size);
+	//g(x)=2x^2-x
+	sum_mat(x1, x2, size, b);
+	fprintf(fout, "\ng(x)=2x^2-x:\n");
+	write_f_mat(fout, b, size);
+
+	clean_mat(x1, size);
+	clean_mat(x2, size);
 }
 
 //процедура считает f(A)*g(A)
-void f_A_x_g_A(FILE* fin, FILE* fout) {
-	//локализация русских букв
-	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);
-	long  x, t;
-	long n;
-	fscanf(fin, "%i", &n);
-	if (n > 0) {
-		d_mat fA = new float*[n], gA = new float*[n], A = new float*[n], rez = new float*[n];
-		create_mat(fA, n);
-		create_mat(gA, n);
-		create_mat(A, n);
-		create_mat(rez, n);
-		read_f_mat(fin, A, n);
-		f_A(fout, A, n, fA);
-		g_A(fout, A, n, gA);
-		mult_matXmat(fA, gA, n, rez);
-		write_f_mat(fout, rez, n);
-		delete fA;
-		delete gA;
-		delete A;
-		delete rez;
-	}
-	else
-	{
-		fprintf(fout, "%s", "Введен неправильный параметр n");
-	}
+d_mat f_A_x_g_A(FILE* fout, d_mat A, long size) {
+
+	d_mat fA = new float* [size], gA = new float* [size], rez = new float* [size];
+	create_mat(fA, size);
+	create_mat(gA, size);
+	create_mat(rez, size);
+
+	f_A(fout, A, size, fA);
+	g_A(fout, A, size, gA);
+
+	mult_matXmat(fA, gA, size, rez);
+	fprintf(fout, "\nf(x)*g(x):\n");
+	write_f_mat(fout, rez, size);
+	clean_mat(fA, size);
+	clean_mat(gA, size);
+
+	return rez;
 }
 
-//процедура находит корень у уравнения вида X * A + b * X = C
-void matrix_equation(FILE* fin, FILE* fout) {
-	//локализация русских букв
-	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);
-	long  n;
-	float b;
-	//читаем размерность матрицы и элемент b из уравнения
-	fscanf(fin, "%i", &n);
-	fscanf(fin, "%i", &b);
-	if (n > 0) {
-		d_mat X = new float*[n], new_A = new float*[n], A = new float*[n], C = new float*[n], e = new float*[n];
-		//создаем матрицы 
-		create_mat(X, n);
-		create_mat(A, n);
-		create_mat(C, n);
-		//читаем матрицы коэфициентов заданные пользователем 
-		read_f_mat(fin, A, n);
-		read_f_mat(fin, A, n);
+//процедура находит корень у уравнения вида X * A + coeff * X = B
+void matrix_equation(FILE* fout, d_mat A, d_mat B, long size, float coeff) {
+	//создаем матрицы 
+	d_mat X = new float* [size];
+	create_mat(X, size);
 
-		if (solve_mat_equation(A, C, n, b, X) == -1)
-			fprintf(fout, "%s", "У заданного уравнения нет решений");
-		else
-			write_f_mat(fout, X, n);
+	if (solve_mat_equation(fout, A, B, size, coeff, X) == -1)
+		fprintf(fout, "%s", "У заданного уравнения нет решений");
+	else {
+		fprintf(fout, "\nX:\n");
+		write_f_mat(fout, X, size);
+	}
 
-		//чистим за собой матрицы
-		delete X;
-		delete A;
-		delete C;
-	}
-	else
-	{
-		fprintf(fout, "%s", "Введен неправильный параметр n");
-	}
+	//чистим за собой матрицы
+	clean_mat(X, size);
 }
