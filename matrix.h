@@ -68,5 +68,5 @@ d_mat f_A_x_g_A(FILE* fout, d_mat A, long n);
 
 //процедура находит корень у уравнения вида X * A + coeff * X = B
 void matrix_equation(FILE* fout, d_mat A, d_mat B, long n, float coeff);
-
+//132
 #endif // _MATRIX_H_

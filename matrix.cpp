@@ -374,3 +374,4 @@ void matrix_equation(FILE* fout, d_mat A, d_mat B, long size, float coeff) {
 	//чистим за собой матрицы
 	clean_mat(X, size);
 }
+//132
